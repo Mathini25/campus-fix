@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h2 class="mb-1">{{ issue.ticket_number }}</h2>
+      <p class="text-muted mb-0">{{ issue.title }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light"><strong>Issue details</strong></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6"><strong>Status:</strong> {{ issue.status }}</div>
+            <div class="col-md-6"><strong>Priority:</strong> {{ issue.priority }}</div>
+            <div class="col-md-6"><strong>Category:</strong> {{ issue.category_name }}</div>
+            <div class="col-md-6"><strong>Location:</strong> {{ issue.building_name }} - {{ issue.room_number }}</div>
+            <div class="col-md-6"><strong>Reporter:</strong> {{ issue.reporter_name }}</div>
+            <div class="col-md-6"><strong>Submitted:</strong> {{ issue.created_at }}</div>
+            <div class="col-md-6"><strong>Due date:</strong> {{ issue.due_date or 'Not set' }}</div>
+          </div>
+          <hr>
+          <p>{{ issue.description }}</p>
+          {% if issue.photo_url %}
+            <img src="{{ issue.photo_url }}" class="img-fluid rounded shadow-sm" alt="Issue photo">
+          {% endif %}
+        </div>
+      </div>
+
+      {% if work_logs %}
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-light"><strong>Work log</strong></div>
+          <div class="list-group list-group-flush">
+            {% for item in work_logs %}
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between"><strong>{{ item.technician_name }}</strong><small>{{ item.created_at }}</small></div>
+                <p class="mb-0 mt-2">{{ item.note }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+      {% if session.get('role') == 'supervisor' or session.get('role') == 'admin' %}
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-light"><strong>Assign technician</strong></div>
+          <div class="card-body">
+            <form method="post" action="{{ url_for('assign_issue', issue_id=issue.id) }}">
+              <div class="mb-3">
+                <label class="form-label">Technician</label>
+                <select class="form-select" name="technician_id" required>
+                  {% for tech in technicians %}
+                    <option value="{{ tech.id }}">{{ tech.first_name }} {{ tech.last_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="priority" class="form-label">Priority</label>
+                <select class="form-select" name="priority">
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="due_date" class="form-label">Target completion date</label>
+                <input class="form-control" type="date" id="due_date" name="due_date">
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Assign</button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if session.get('role') == 'technician' %}
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-light"><strong>Update work status</strong></div>
+          <div class="card-body">
+            <form method="post" action="{{ url_for('update_status', issue_id=issue.id) }}">
+              <div class="mb-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="status">
+                  <option value="Assigned">Assigned</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Work note</label>
+                <textarea class="form-control" name="work_note" rows="4"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Update</button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if session.get('role') in ['student', 'lecturer'] and issue.reporter_id == session.get('user_id') %}
+        {% if issue.status in ['Pending', 'Assigned', 'In Progress'] %}
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light"><strong>Edit issue</strong></div>
+            <div class="card-body">
+              <form method="post" action="{{ url_for('update_issue', issue_id=issue.id) }}">
+                <div class="mb-3"><input type="text" name="title" class="form-control" value="{{ issue.title }}" required></div>
+                <div class="mb-3"><textarea name="description" class="form-control" rows="4" required>{{ issue.description }}</textarea></div>
+                <button type="submit" class="btn btn-outline-primary w-100" name="action" value="update">Save changes</button>
+                <button type="submit" class="btn btn-outline-danger w-100 mt-2" name="action" value="cancel">Cancel report</button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if issue.status == 'Resolved' %}
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-light"><strong>Confirm fix & rate service</strong></div>
+            <div class="card-body">
+              <form method="post" action="{{ url_for('submit_feedback', issue_id=issue.id) }}">
+                <div class="mb-3">
+                  <label class="form-label">Rating</label>
+                  <select class="form-select" name="rating" required>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Average</option>
+                    <option value="2">2 - Poor</option>
+                    <option value="1">1 - Very poor</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Comment</label>
+                  <textarea class="form-control" name="comment" rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Submit feedback</button>
+              </form>
+              <form method="post" action="{{ url_for('submit_feedback', issue_id=issue.id) }}" class="mt-2">
+                <input type="hidden" name="action" value="reopen">
+                <button type="submit" class="btn btn-outline-warning w-100">Reopen issue — the repair is not fixed</button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

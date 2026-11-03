@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h2 class="mb-0">Admin panel</h2>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('reports') }}" class="btn btn-outline-primary">Report center</a>
+      <a href="{{ url_for('database_diagram') }}" class="btn btn-outline-dark">Database diagram</a>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Total issues</div><h3>{{ stats.issues_total }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Users</div><h3>{{ stats.users_total }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Open tasks</div><h3>{{ stats.pending_total }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Resolved</div><h3>{{ stats.resolved_total }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Open lost/found notices</div><h3>{{ stats.lost_found_total }}</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Vehicle stickers awaiting review</div><h3>{{ stats.vehicle_pending_total }}</h3></div></div></div>
+  </div>
+  <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>Review lost-and-found matches and vehicle sticker requests in the Campus services workspace.</span>
+    <a class="btn btn-sm btn-primary" href="{{ url_for('campus_services') }}">Open Campus services</a>
+  </div>
+  <form method="get" class="card card-body shadow-sm border-0 mb-4">
+    <label class="form-label" for="admin-search">Search users, campus locations, categories and tickets</label>
+    <div class="input-group">
+      <input class="form-control" id="admin-search" type="search" name="q" value="{{ search }}" placeholder="Name, email, building, room, category or ticket">
+      <button class="btn btn-outline-primary" type="submit">Search</button>
+      {% if search %}<a class="btn btn-outline-secondary" href="{{ url_for('admin_panel') }}">Clear</a>{% endif %}
+    </div>
+  </form>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light"><strong>Add user</strong></div>
+        <div class="card-body">
+          <form method="post">
+            <input type="hidden" name="action" value="add_user">
+            <div class="row g-3">
+              <div class="col-md-6"><input type="text" class="form-control" name="first_name" placeholder="First name" required></div>
+              <div class="col-md-6"><input type="text" class="form-control" name="last_name" placeholder="Last name" required></div>
+              <div class="col-md-6"><input type="email" class="form-control" name="email" placeholder="Email" required></div>
+              <div class="col-md-6"><input type="text" class="form-control" name="phone" placeholder="Phone"></div>
+              <div class="col-md-6"><input type="password" class="form-control" name="password" placeholder="Password (10+ characters)" minlength="10" autocomplete="new-password" required></div>
+              <div class="col-md-6">
+                <select class="form-select" name="role">
+                  {% for role in ['student','lecturer','technician','supervisor','admin'] %}
+                    <option value="{{ role }}">{{ role|title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-check mt-3">
+              <input class="form-check-input" type="checkbox" name="two_factor_enabled" id="two_factor_enabled">
+              <label class="form-check-label" for="two_factor_enabled">Require authenticator setup for this admin/supervisor</label>
+            </div>
+            <button class="btn btn-primary mt-3" type="submit">Create user</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light"><strong>Add category</strong></div>
+        <div class="card-body">
+          <form method="post">
+            <input type="hidden" name="action" value="add_category">
+            <div class="input-group">
+              <input type="text" class="form-control" name="name" placeholder="New category" required>
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </form>
+          <div class="list-group list-group-flush mt-3">
+            {% for category in categories %}
+              <div class="list-group-item px-0">
+                <div class="row g-2 align-items-center">
+                  <div class="col">
+                    <form method="post" class="d-flex gap-2">
+                      <input type="hidden" name="action" value="edit_category">
+                      <input type="hidden" name="category_id" value="{{ category.id }}">
+                      <input class="form-control form-control-sm" name="name" value="{{ category.name }}" maxlength="80" required aria-label="Category name">
+                      <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                    </form>
+                  </div>
+                  <div class="col-auto">
+                    <form method="post">
+                      <input type="hidden" name="action" value="delete_category">
+                      <input type="hidden" name="category_id" value="{{ category.id }}">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            {% else %}<p class="small text-muted mt-3 mb-0">No matching categories.</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light"><strong>Add building</strong></div>
+        <div class="card-body">
+          <form method="post">
+            <input type="hidden" name="action" value="add_building">
+            <div class="input-group">
+              <input type="text" class="form-control" name="building_name" placeholder="Building name" required>
+              <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+          </form>
+          <div class="list-group list-group-flush mt-3">
+            {% for building in buildings %}
+              <div class="list-group-item px-0">
+                <div class="row g-2 align-items-center">
+                  <div class="col">
+                    <form method="post" class="d-flex gap-2">
+                      <input type="hidden" name="action" value="edit_building">
+                      <input type="hidden" name="building_id" value="{{ building.id }}">
+                      <input class="form-control form-control-sm" name="building_name" value="{{ building.name }}" maxlength="120" required aria-label="Building name">
+                      <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                    </form>
+                  </div>
+                  <div class="col-auto">
+                    <form method="post">
+                      <input type="hidden" name="action" value="delete_building">
+                      <input type="hidden" name="building_id" value="{{ building.id }}">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            {% else %}<p class="small text-muted mt-3 mb-0">No matching buildings.</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light"><strong>Add room</strong></div>
+        <div class="card-body">
+          <form method="post">
+            <input type="hidden" name="action" value="add_room">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <select class="form-select" name="building_id" required>
+                  {% for building in buildings %}
+                    <option value="{{ building.id }}">{{ building.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6">
+                <input type="text" class="form-control" name="room_number" placeholder="Room number" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Add room</button>
+          </form>
+          <div class="list-group list-group-flush mt-3">
+            {% for room in rooms %}
+              <div class="list-group-item px-0">
+                <form method="post" class="row g-2 align-items-center">
+                  <input type="hidden" name="action" value="edit_room">
+                  <input type="hidden" name="room_id" value="{{ room.id }}">
+                  <div class="col-md-4">
+                    <select class="form-select form-select-sm" name="building_id" aria-label="Room building">
+                      {% for building in buildings %}<option value="{{ building.id }}" {% if building.id == room.building_id %}selected{% endif %}>{{ building.name }}</option>{% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-4"><input class="form-control form-control-sm" name="room_number" value="{{ room.room_number }}" maxlength="60" required aria-label="Room name"></div>
+                  <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit">Save</button></div>
+                  <div class="col-auto">
+                    <button class="btn btn-sm btn-outline-danger" type="submit" form="delete-room-{{ room.id }}">Delete</button>
+                  </div>
+                </form>
+                <form id="delete-room-{{ room.id }}" method="post" class="d-none">
+                  <input type="hidden" name="action" value="delete_room">
+                  <input type="hidden" name="room_id" value="{{ room.id }}">
+                </form>
+              </div>
+            {% else %}<p class="small text-muted mt-3 mb-0">No matching rooms.</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light"><strong>Audit log</strong></div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Action</th><th>Details</th><th>Time</th></tr></thead>
+            <tbody>
+              {% for log in audit_logs %}
+                <tr>
+                  <td>{{ log.action }}</td>
+                  <td>{{ log.details }}</td>
+                  <td>{{ log.created_at }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light"><strong>User management</strong></div>
+        <div class="list-group list-group-flush">
+          {% for user_record in users %}
+            <div class="list-group-item">
+              <form method="post" class="row g-2 align-items-center">
+                <input type="hidden" name="action" value="edit_user">
+                <input type="hidden" name="user_id" value="{{ user_record.id }}">
+                <div class="col-md-6"><label class="form-label small mb-0">First name</label><input class="form-control form-control-sm" name="first_name" value="{{ user_record.first_name }}" required></div>
+                <div class="col-md-6"><label class="form-label small mb-0">Last name</label><input class="form-control form-control-sm" name="last_name" value="{{ user_record.last_name }}" required></div>
+                <div class="col-md-6"><label class="form-label small mb-0">Email</label><input class="form-control form-control-sm" name="email" type="email" value="{{ user_record.email }}" required></div>
+                <div class="col-md-6"><label class="form-label small mb-0">Phone</label><input class="form-control form-control-sm" name="phone" value="{{ user_record.phone or '' }}"></div>
+                <div class="col-md-6">
+                  <label class="form-label small mb-0">Role</label>
+                  <select class="form-select form-select-sm" name="role">
+                    {% for role in ['student','lecturer','technician','supervisor','admin'] %}<option value="{{ role }}" {% if user_record.role == role %}selected{% endif %}>{{ role|title }}</option>{% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-6"><label class="form-label small mb-0">New password (optional)</label><input class="form-control form-control-sm" type="password" name="password" minlength="10" autocomplete="new-password"></div>
+                {% if user_record.role in ['admin', 'supervisor'] %}
+                  <div class="col-12 form-check ms-2">
+                    <input class="form-check-input" type="checkbox" name="two_factor_enabled" id="user-2fa-{{ user_record.id }}" {% if user_record.two_factor_enabled %}checked{% endif %}>
+                    <label class="form-check-label small" for="user-2fa-{{ user_record.id }}">Require authenticator-based two-factor login</label>
+                  </div>
+                {% endif %}
+                <div class="col-12 d-flex gap-2 align-items-center">
+                  <button class="btn btn-sm btn-primary" type="submit">Save user</button>
+                  <span class="badge text-bg-{{ 'success' if user_record.is_active else 'secondary' }}">{{ 'Active' if user_record.is_active else 'Inactive' }}</span>
+                  {% if user_record.two_factor_enabled %}<span class="badge text-bg-info">2FA required</span>{% endif %}
+                </div>
+              </form>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <form method="post">
+                  <input type="hidden" name="action" value="{{ 'deactivate_user' if user_record.is_active else 'activate_user' }}">
+                  <input type="hidden" name="user_id" value="{{ user_record.id }}">
+                  <button class="btn btn-sm btn-outline-secondary" type="submit">{{ 'Deactivate' if user_record.is_active else 'Reactivate' }}</button>
+                </form>
+                {% if user_record.id != user.id %}
+                  <form method="post">
+                    <input type="hidden" name="action" value="delete_user">
+                    <input type="hidden" name="user_id" value="{{ user_record.id }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          {% else %}<p class="p-3 text-muted mb-0">No matching users.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-light"><strong>{% if search %}Matching issue list{% else %}Recent issue list{% endif %}</strong></div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr><th>Ticket</th><th>Title</th><th>Reporter</th><th>Category</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for issue in issues %}
+            <tr>
+              <td><a href="{{ url_for('issue_detail', issue_id=issue.id) }}">{{ issue.ticket_number }}</a></td>
+              <td>{{ issue.title }}</td>
+              <td>{{ issue.reporter_name }}</td>
+              <td>{{ issue.category_name }}</td>
+              <td>{{ issue.status }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+body {
+  background: #f5f7fb;
+  color: #1a2233;
+}
+
+.navbar-brand img {
+  display: block;
+  max-width: 100%;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+
+.hero-bg {
+  background: linear-gradient(135deg, #0d6efd 0%, #0b3d91 100%);
+}
+
+.feature-list li {
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.feature-list span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+.badge-icon {
+  width: 52px;
+  height: 52px;
+  background: #e8f1ff;
+  font-size: 28px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  border-radius: 16px;
+}
+
+.table thead th {
+  background: #f8f9fa;
+}
+
+.btn-primary {
+  border-radius: 10px;
+}
+
+.form-control, .form-select {
+  border-radius: 10px;
+}

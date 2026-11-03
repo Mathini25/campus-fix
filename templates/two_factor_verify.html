@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <h1 class="h3">Two-factor verification</h1>
+          <p class="text-muted">Enter the current six-digit code from your authenticator app.</p>
+          <form method="post">
+            <label class="form-label" for="code">Authenticator code</label>
+            <input class="form-control" id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+            <button class="btn btn-primary w-100 mt-3" type="submit">Verify and sign in</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

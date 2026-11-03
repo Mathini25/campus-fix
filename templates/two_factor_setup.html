@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <h1 class="h3">Set up an authenticator</h1>
+          <p>Scan the setup URI with an authenticator app, or add an account manually using this secret. Codes change every 30 seconds.</p>
+          <div class="alert alert-secondary">
+            <strong>Secret key</strong>
+            <code class="d-block user-select-all mt-1">{{ secret }}</code>
+          </div>
+          <details class="mb-3">
+            <summary>Show setup URI</summary>
+            <code class="d-block text-break mt-2">{{ provisioning_uri }}</code>
+          </details>
+          <form method="post" action="{{ url_for('two_factor_confirm') }}">
+            <label class="form-label" for="code">Six-digit authenticator code</label>
+            <input class="form-control" id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+            <button class="btn btn-primary w-100 mt-3" type="submit">Verify and enable</button>
+          </form>
+          {% if session.get('pending_2fa_setup_user_id') %}
+            <p class="small text-muted mt-3 mb-0">You must verify an authenticator code to complete sign-in.</p>
+          {% else %}
+            <p class="small text-muted mt-3 mb-0">Store the secret securely. Anyone who has it can generate codes for this account.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h2 class="mb-1">Campus services</h2>
+      <p class="text-muted mb-0">Lost and found, vehicle stickers, and your campus service requests.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+  </div>
+
+  {% if user.role in ['student', 'lecturer'] %}
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-primary text-white"><strong>Post a lost or found item</strong></div>
+          <div class="card-body">
+            <form method="post" action="{{ url_for('create_lost_found_item') }}">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="item_type">Notice type</label>
+                  <select class="form-select" id="item_type" name="item_type" required>
+                    <option value="Lost">I lost an item</option>
+                    <option value="Found">I found an item</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="item_name">Item name</label>
+                  <input class="form-control" id="item_name" name="item_name" maxlength="120" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="item_category">Category</label>
+                  <input class="form-control" id="item_category" name="item_category" placeholder="ID card, books, keys..." maxlength="80" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="date_occurred">Date lost or found</label>
+                  <input class="form-control" id="date_occurred" name="date_occurred" type="date" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="item_location">Campus location</label>
+                  <input class="form-control" id="item_location" name="location" placeholder="Building and room or area" maxlength="160" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="item_description">Description</label>
+                  <textarea class="form-control" id="item_description" name="description" rows="3" maxlength="1000" placeholder="Include identifying details, but keep sensitive information private." required></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="contact_phone">Contact phone (optional)</label>
+                  <input class="form-control" id="contact_phone" name="contact_phone" type="tel" value="{{ user.phone or '' }}" maxlength="30">
+                </div>
+              </div>
+              <button class="btn btn-primary mt-3" type="submit">Post notice</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-header bg-primary text-white"><strong>Request a vehicle sticker</strong></div>
+          <div class="card-body">
+            <p class="text-muted">Submit your vehicle details. A supervisor or administrator must approve the request before a sticker number is issued.</p>
+            <form method="post" action="{{ url_for('register_vehicle') }}">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" for="registration_number">Registration number</label>
+                  <input class="form-control text-uppercase" id="registration_number" name="registration_number" maxlength="20" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="vehicle_type">Vehicle type</label>
+                  <select class="form-select" id="vehicle_type" name="vehicle_type" required>
+                    <option>Car</option>
+                    <option>Motorcycle</option>
+                    <option>Van</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="vehicle_make">Make</label>
+                  <input class="form-control" id="vehicle_make" name="make" maxlength="60" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="vehicle_model">Model</label>
+                  <input class="form-control" id="vehicle_model" name="model" maxlength="60" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="vehicle_colour">Colour</label>
+                  <input class="form-control" id="vehicle_colour" name="colour" maxlength="40" required>
+                </div>
+              </div>
+              <button class="btn btn-primary mt-3" type="submit">Submit sticker request</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="row g-4 mb-4">
+    {% if user.role in ['student', 'lecturer'] %}
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-light"><strong>My vehicle registrations</strong></div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Vehicle</th><th>Registration</th><th>Status</th><th>Sticker</th></tr></thead>
+              <tbody>
+                {% for vehicle in vehicles %}
+                  <tr>
+                    <td>{{ vehicle.colour }} {{ vehicle.make }} {{ vehicle.model }}</td>
+                    <td>{{ vehicle.registration_number }}</td>
+                    <td>{{ vehicle.status }}</td>
+                    <td>{{ vehicle.sticker_number or '—' }}</td>
+                  </tr>
+                {% else %}
+                  <tr><td class="text-muted p-3" colspan="4">No vehicle requests yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-light"><strong>My lost-and-found notices</strong></div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Reference</th><th>Item</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for item in own_items %}
+                  <tr>
+                    <td>{{ item.reference_number }}</td>
+                    <td>{{ item.item_type }}: {{ item.item_name }}</td>
+                    <td>{{ item.status }}</td>
+                    <td>
+                      {% if item.status == 'Matched' %}
+                        <form method="post" action="{{ url_for('update_lost_found_status', item_id=item.id) }}">
+                          <input type="hidden" name="status" value="Returned">
+                          <button class="btn btn-sm btn-success" type="submit">Mark returned</button>
+                        </form>
+                      {% else %}—{% endif %}
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td class="text-muted p-3" colspan="4">You have not posted a lost-and-found notice.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% elif is_staff %}
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-light"><strong>Vehicle sticker review queue</strong></div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>Owner</th><th>Vehicle</th><th>Registration</th><th>Status</th><th>Decision</th></tr></thead>
+              <tbody>
+                {% for vehicle in vehicles %}
+                  <tr>
+                    <td>{{ vehicle.owner_name }}<small class="d-block text-muted">{{ vehicle.owner_email }}</small></td>
+                    <td>{{ vehicle.colour }} {{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.vehicle_type }})</td>
+                    <td>{{ vehicle.registration_number }}</td>
+                    <td>{{ vehicle.status }}</td>
+                    <td>
+                      {% if vehicle.status == 'Pending' %}
+                        <div class="d-flex gap-2">
+                          <form method="post" action="{{ url_for('review_vehicle', vehicle_id=vehicle.id) }}">
+                            <input type="hidden" name="decision" value="Approved">
+                            <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                          </form>
+                          <form method="post" action="{{ url_for('review_vehicle', vehicle_id=vehicle.id) }}">
+                            <input type="hidden" name="decision" value="Rejected">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                          </form>
+                        </div>
+                      {% else %}{{ vehicle.sticker_number or '—' }}{% endif %}
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr><td class="text-muted p-3" colspan="5">No vehicle registrations have been submitted.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="col-12">
+        <div class="alert alert-info mb-0">Vehicle sticker requests are available to student and lecturer accounts. Contact an administrator if you need to update your campus role.</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-light"><strong>{% if is_staff %}Possible item matches to review{% else %}My possible-match submissions{% endif %}</strong></div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr><th>Notice</th><th>Submitted by</th><th>Match details</th><th>Status</th>{% if is_staff %}<th>Decision</th>{% endif %}</tr></thead>
+        <tbody>
+          {% for claim in claims %}
+            <tr>
+              <td>{{ claim.reference_number }} — {{ claim.item_name }}</td>
+              <td>{{ claim.claimant_name }}</td>
+              <td>{{ claim.message }}</td>
+              <td>{{ claim.status }}</td>
+              {% if is_staff %}
+                <td>
+                  {% if claim.status == 'Pending' %}
+                    <div class="d-flex gap-2">
+                      <form method="post" action="{{ url_for('review_lost_found_claim', claim_id=claim.id) }}">
+                        <input type="hidden" name="decision" value="Approved">
+                        <button class="btn btn-sm btn-success" type="submit">Approve match</button>
+                      </form>
+                      <form method="post" action="{{ url_for('review_lost_found_claim', claim_id=claim.id) }}">
+                        <input type="hidden" name="decision" value="Rejected">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                      </form>
+                    </div>
+                  {% else %}—{% endif %}
+                </td>
+              {% endif %}
+            </tr>
+          {% else %}
+            <tr><td class="text-muted p-3" colspan="{{ 5 if is_staff else 4 }}">No possible matches to display.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-light"><strong>{% if is_staff %}Lost-and-found notices{% else %}Open lost-and-found board{% endif %}</strong></div>
+    <div class="row g-3 p-3">
+      {% for item in items %}
+        <div class="col-md-6 col-xl-4">
+          <div class="card h-100 border">
+            <div class="card-body">
+              <div class="d-flex justify-content-between gap-2">
+                <span class="badge text-bg-{{ 'warning' if item.item_type == 'Lost' else 'info' }}">{{ item.item_type }}</span>
+                <small class="text-muted">{{ item.reference_number }}</small>
+              </div>
+              <h3 class="h5 mt-3">{{ item.item_name }}</h3>
+              <p class="mb-2">{{ item.description }}</p>
+              <p class="small text-muted mb-1">{{ item.category }} · {{ item.location }}</p>
+              <p class="small text-muted mb-2">Date: {{ item.date_occurred }} · Status: {{ item.status }}</p>
+              {% if is_staff %}
+                <p class="small text-muted">Reported by {{ item.reporter_name }}{% if item.contact_phone %} · Contact: {{ item.contact_phone }}{% endif %}</p>
+              {% endif %}
+              {% if is_staff %}
+                <form method="post" action="{{ url_for('update_lost_found_status', item_id=item.id) }}" class="d-flex gap-2">
+                  <select class="form-select form-select-sm" name="status" aria-label="Update notice status">
+                    <option value="Open" {% if item.status == 'Open' %}selected{% endif %}>Open</option>
+                    <option value="Returned" {% if item.status == 'Returned' %}selected{% endif %}>Returned</option>
+                    <option value="Closed" {% if item.status == 'Closed' %}selected{% endif %}>Closed</option>
+                  </select>
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Update</button>
+                </form>
+              {% elif item.reporter_id == user.id and item.status == 'Matched' %}
+                <form method="post" action="{{ url_for('update_lost_found_status', item_id=item.id) }}">
+                  <input type="hidden" name="status" value="Returned">
+                  <button class="btn btn-sm btn-success" type="submit">Mark returned</button>
+                </form>
+              {% elif user.role in ['student', 'lecturer'] and item.status == 'Open' and item.reporter_id != user.id %}
+                <form method="post" action="{{ url_for('create_lost_found_claim', item_id=item.id) }}">
+                  <label class="form-label small" for="match-{{ item.id }}">Know something about this item?</label>
+                  <textarea class="form-control form-control-sm mb-2" id="match-{{ item.id }}" name="message" rows="2" maxlength="1000" placeholder="Describe the possible match" required></textarea>
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Submit possible match</button>
+                </form>
+              {% elif item.status != 'Open' %}
+                <span class="small text-muted">This notice is being resolved.</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">There are no open notices yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-3">CampusFix help</h1>
+  <p class="lead">CampusFix is a standalone campus services application. It does not connect to Chania or any university production system.</p>
+  <p><a class="btn btn-outline-primary" href="{{ url_for('download_user_guide') }}">Download the user and deployment guide</a></p>
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h2 class="h5">Students and lecturers</h2>
+          <ol>
+            <li>Create an account and sign in.</li>
+            <li>Use the dashboard to report and track a facilities issue.</li>
+            <li>Open Campus services to post lost/found notices or request a vehicle sticker.</li>
+            <li>Check notifications for staff decisions and progress updates.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h2 class="h5">Technicians and supervisors</h2>
+          <p>Technicians use their dashboard to open assigned tickets, add work notes and update repair status. Supervisors review new tickets, set priority/deadline, assign active technicians, and review lost-item matches and vehicle sticker requests in Campus services.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h2 class="h5">Administrators</h2>
+          <p>The admin panel manages users and campus catalogs, and provides reports and audit records. Database backups are generated once per day when the application starts; use the Database backup link to download the latest backup.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <h2 class="h5">Account recovery and security</h2>
+          <p>Use “Forgot your password?” on the login page to request a reset link. Email delivery requires the SMTP settings described in the deployment guide. Supervisors and administrators can enroll an authenticator app from Security.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

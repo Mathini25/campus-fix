@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+      <img src="{{ url_for('static', filename='campusfix-logo.svg') }}" width="150" height="34" class="mb-2 rounded bg-primary p-1" alt="CampusFix logo">
+      <h2 class="mb-1">Reports dashboard</h2>
+      <p class="text-muted mb-0">{{ organization_name }} · Generated {{ generated_at }}</p>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back</a>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label" for="report-search">Search tickets</label>
+          <input class="form-control" id="report-search" type="search" name="q" value="{{ filters.q }}" placeholder="Ticket, title, description or reporter email">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="sort">Sort by</label>
+          <select class="form-select" id="sort" name="sort">
+            {% for value, label in [('created_at','Submitted date'),('due_date','Due date'),('priority','Priority'),('status','Status'),('ticket_number','Ticket'),('category','Category'),('building','Building')] %}
+              <option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label" for="direction">Order</label>
+          <select class="form-select" id="direction" name="direction">
+            <option value="desc" {% if filters.direction == 'desc' %}selected{% endif %}>Descending</option>
+            <option value="asc" {% if filters.direction == 'asc' %}selected{% endif %}>Ascending</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Category</label>
+          <select class="form-select" name="category_id">
+            <option value="">All</option>
+            {% for category in categories %}
+              <option value="{{ category.id }}" {% if filters.category_id == category.id|string %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Building</label>
+          <select class="form-select" name="building_id">
+            <option value="">All</option>
+            {% for building in buildings %}
+              <option value="{{ building.id }}" {% if filters.building_id == building.id|string %}selected{% endif %}>{{ building.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" name="status">
+            <option value="">All</option>
+            <option value="Pending" {% if filters.status == 'Pending' %}selected{% endif %}>Pending</option>
+            <option value="Assigned" {% if filters.status == 'Assigned' %}selected{% endif %}>Assigned</option>
+            <option value="In Progress" {% if filters.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if filters.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+            <option value="Closed" {% if filters.status == 'Closed' %}selected{% endif %}>Closed</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Technician</label>
+          <select class="form-select" name="technician_id">
+            <option value="">All</option>
+            {% for tech in technicians %}
+              <option value="{{ tech.id }}" {% if filters.technician_id == tech.id|string %}selected{% endif %}>{{ tech.first_name }} {{ tech.last_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button class="btn btn-primary w-100" type="submit">Filter</button>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">From</label>
+          <input type="date" class="form-control" name="start_date" value="{{ filters.start_date }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">To</label>
+          <input type="date" class="form-control" name="end_date" value="{{ filters.end_date }}">
+        </div>
+        <div class="col-md-6 d-flex align-items-end justify-content-end gap-2">
+          <a class="btn btn-outline-danger" href="{{ url_for('export_reports', format='pdf', category_id=filters.category_id, building_id=filters.building_id, status=filters.status, technician_id=filters.technician_id, start_date=filters.start_date, end_date=filters.end_date, q=filters.q, sort=filters.sort, direction=filters.direction) }}">Export PDF</a>
+          <a class="btn btn-outline-success" href="{{ url_for('export_reports', format='xlsx', category_id=filters.category_id, building_id=filters.building_id, status=filters.status, technician_id=filters.technician_id, start_date=filters.start_date, end_date=filters.end_date, q=filters.q, sort=filters.sort, direction=filters.direction) }}">Export Excel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-light"><strong>Filtered issue log ({{ rows|length }} records)</strong></div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Tech</th>
+            <th>Status</th>
+            <th>Submitted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td><a href="{{ url_for('issue_detail', issue_id=row.id) }}">{{ row.ticket_number }}</a></td>
+              <td>{{ row.title }}</td>
+              <td>{{ row.category_name }}</td>
+              <td>{{ row.building_name }} - {{ row.room_number }}</td>
+              <td>{{ row.technician_name or 'Unassigned' }}</td>
+              <td>{{ row.status }}</td>
+              <td>{{ row.created_at }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
